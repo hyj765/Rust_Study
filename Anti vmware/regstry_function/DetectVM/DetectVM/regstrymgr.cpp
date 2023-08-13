@@ -64,5 +64,24 @@ void RegMgr::RegstrySelectALL(HKEY key, const char* subkey) {
 		datasiz = 16384;
 	}
 
+	RegCloseKey(regList);
 	return;
+}
+
+
+bool RegMgr::RegstrySelect(HKEY key, const char* subkey, const char* selectkey) {
+	
+	HKEY regList = NULL;
+	regList = this->RegstryOpen(key, subkey);
+	if (regList == NULL) {
+		return false;
+	}
+	
+	char buffer[265];
+	DWORD getByte;
+	RegQueryValueExA(regList, selectkey,NULL,NULL,(LPBYTE)buffer,&getByte);
+
+	printf("%s", buffer);
+	RegCloseKey(regList);
+	return true;
 }
