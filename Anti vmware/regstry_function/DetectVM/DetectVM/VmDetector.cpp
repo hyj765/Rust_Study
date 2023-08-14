@@ -1,17 +1,8 @@
 #include "VmDetector.h"
 
-
-VMDetector::VMDetector() {
-	this->registryManager = new RegMgr();
-}
-
-VMDetector::~VMDetector() {
-	delete registryManager;
-}
-
 bool VMDetector::DetectVirtualMachine() {
 	bool flag = true;
-	flag=registryManager->RegstrySelect(HKEY_LOCAL_MACHINE, "SOFTWARE\\oracle","virtualboxguestaddition");
+	flag=registryManager.RegstrySelect(HKEY_LOCAL_MACHINE, "SOFTWARE\\oracle","virtualboxguestaddition");
 	if (flag) {
 		return false;
 	}
@@ -90,7 +81,9 @@ bool VMDetector::MacAddressCheck(const std::vector<std::vector<int>> &prefixarr)
 std::vector<DWORD> VMDetector::RetCPUID() {
 
 	DWORD id1, id2, id3;
+
 	__asm {
+
 		mov eax, 0x1
 		cpuid
 		mov eax, 0x40000000
@@ -98,7 +91,46 @@ std::vector<DWORD> VMDetector::RetCPUID() {
 		mov id1, ebx
 		mov id2, ecx
 		mov id3, edx
+
 	}
 
 	return { id1,id2,id3 };
+}
+
+
+bool VMDetector::IOPortBasedDetection() {
+	
+	int v1, v2;
+
+	__try {
+		__asm {
+
+			push eax
+			push ebx
+			push ecx
+			push edx
+
+			mov eax, 'VMXh'
+			mov ebx, 0
+			mov ecx, 0Ah
+			mov edx, 'VX'
+
+			in eax, dx;
+
+			mov v1, ebx
+			mov v2, ecx
+
+			pop edx
+			pop ecx
+			pop ebx
+			pop eax
+
+		}
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+
+		return false;
+	}
+
+	return true;
 }
