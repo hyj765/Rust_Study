@@ -80,8 +80,6 @@ bool RegMgr::RegstrySelect(HKEY key, const char* subkey, const char* selectkey) 
 	char buffer[265];
 	DWORD getByte;
 	RegQueryValueExA(regList, selectkey,NULL,NULL,(LPBYTE)buffer,&getByte);
-
-	printf("%s", buffer);
 	RegCloseKey(regList);
 	return true;
 }

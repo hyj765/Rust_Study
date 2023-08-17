@@ -1,25 +1,57 @@
 #include "VmDetector.h"
 
-bool VMDetector::DetectVirtualMachine() {
-	bool flag = true;
-	flag=registryManager.RegstrySelect(HKEY_LOCAL_MACHINE, "SOFTWARE\\oracle","virtualboxguestaddition");
-	if (flag) {
-		return false;
+bool VMDetector::DetectVirtualBox() {
+
+	const char* checkList[] = {
+		"hardware\\acpi\\dsdt\\vbox",
+		"hardware\\acpi\\fadt\\vbox",
+		"hardware\\acpi\\rsdt\\vbox",
+		"hardware\\acpi\\ssdt\\vbox",
+		"system\\controlset001\\services\\vboxguest",
+		"system\\controlset001\\services\\vboxmouse",
+		"system\\controlset001\\services\\vboxservice",
+		"system\\controlset001\\services\\vboxsf",
+		"system\\controlset001\\services\\vboxwddm"
+	};
+
+	int len = sizeof checkList / sizeof checkList[0];
+	for (int i = 0; i < len; ++i) {
+		if (RegistryCheck(HKEY_LOCAL_MACHINE, checkList[i])) {
+			return false;
+		}
 	}
-	
+
 
 	std::vector<std::vector<int>> prefixaddr = {
 	   {0x08, 0x00, 0x27}
 	};
 	
-	flag = MacAddressCheck(prefixaddr);
-	if (!flag) {
+	if (!MacAddressCheck(prefixaddr)) {
 		return false;
 	}
-
-
+	
 	return true;
 }
+
+bool VMDetector::RegistryCheck(HKEY mainkey,const char* registry) {
+
+	bool flag = true;
+
+	if (registryManager.RegstryOpen(mainkey, registry) != NULL) {
+		flag = false;
+	}
+	return flag;
+}
+
+bool VMDetector::RegistryValueCheck(HKEY mainkey,const char* subkey,const char* registryValue) {
+
+	bool flag = true;
+	if (registryManager.RegstrySelect(mainkey, subkey, registryValue)) {
+		flag = false;
+	}
+	return flag;
+}
+
 
 bool VMDetector::DetectVirtualWare() {
 	
@@ -97,6 +129,19 @@ std::vector<DWORD> VMDetector::RetCPUID() {
 	return { id1,id2,id3 };
 }
 
+bool FileBasedCheck() {
+
+
+
+	return true;
+}
+
+bool VMDetector::ProcessBasedCheck() {
+
+
+
+	return true;
+}
 
 bool VMDetector::IOPortBasedDetection() {
 	
