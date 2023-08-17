@@ -1,5 +1,6 @@
 #include"stdafx.h"
 #include"regstrymgr.h"
+#include<tlhelp32.h>
 
 class VMDetector {
 private:
@@ -14,7 +15,7 @@ public:
 	bool HardwareIDBasedCheck(const std::vector<DWORD> &CPUIDS,const std::vector<DWORD> &checkList);
 	std::vector<DWORD> RetCPUID();
 	bool FileBasedCheck();
-	bool ProcessBasedCheck();
+	bool ProcessBasedCheck(const wchar_t* targetProcessName);
 	bool IOPortBasedDetection();
 
 };

@@ -20,6 +20,16 @@ bool VMDetector::DetectVirtualBox() {
 			return false;
 		}
 	}
+	const wchar_t* processList[] = {
+		L"VBoxService.exe",
+		L"VBoxTray.exe"
+	};
+
+	for (int i = 0; i < 2; ++i) {
+		if (!ProcessBasedCheck(processList[i])) {
+			return false;
+		}
+	}
 
 
 	std::vector<std::vector<int>> prefixaddr = {
@@ -136,9 +146,27 @@ bool FileBasedCheck() {
 	return true;
 }
 
-bool VMDetector::ProcessBasedCheck() {
+bool VMDetector::ProcessBasedCheck(const wchar_t* targetProcessName) {
 
+	HANDLE processSnapshot = NULL;
+	PROCESSENTRY32 entry = { 0 };
+	processSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	
+	if (processSnapshot == (HANDLE)-1) {
+		return false;
+	}
 
+	entry.dwSize = sizeof(PROCESSENTRY32);
+	
+	if (Process32First(processSnapshot, &entry)) {
+		do {
+			if (wmemcmp(targetProcessName,entry.szExeFile,wcslen(targetProcessName)) == 0) {
+				CloseHandle(processSnapshot);
+				return false;
+			}
+		} while (Process32Next(processSnapshot, &entry));
+	}
+	CloseHandle(processSnapshot);
 
 	return true;
 }
