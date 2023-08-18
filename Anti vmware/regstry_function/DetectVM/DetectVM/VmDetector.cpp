@@ -16,10 +16,28 @@ bool VMDetector::DetectVirtualBox() {
 
 	int len = sizeof checkList / sizeof checkList[0];
 	for (int i = 0; i < len; ++i) {
-		if (RegistryCheck(HKEY_LOCAL_MACHINE, checkList[i])) {
+		if (!RegistryCheck(HKEY_LOCAL_MACHINE, checkList[i])) {
 			return false;
 		}
 	}
+
+
+	
+	const char* cmpValues[] = {
+		"VBOX",
+		"Oracle VM VirtualBox Version"
+	};
+	const char* ValueKey[] = {
+		"SystemBiosVersion",
+		"VideoBiosVersioin"
+	};
+
+	for (int i = 0; i < 2; ++i) {
+		RegistryValueCheck(HKEY_LOCAL_MACHINE,"software\\description\\system", ValueKey[i],cmpValues[i]);
+	}
+
+
+
 	const wchar_t* processList[] = {
 		L"VBoxService.exe",
 		L"VBoxTray.exe"
@@ -27,6 +45,7 @@ bool VMDetector::DetectVirtualBox() {
 
 	for (int i = 0; i < 2; ++i) {
 		if (!ProcessBasedCheck(processList[i])) {
+			printf("pc");
 			return false;
 		}
 	}
@@ -37,6 +56,7 @@ bool VMDetector::DetectVirtualBox() {
 	};
 	
 	if (!MacAddressCheck(prefixaddr)) {
+		printf("ps");
 		return false;
 	}
 	
@@ -53,11 +73,16 @@ bool VMDetector::RegistryCheck(HKEY mainkey,const char* registry) {
 	return flag;
 }
 
-bool VMDetector::RegistryValueCheck(HKEY mainkey,const char* subkey,const char* registryValue) {
+bool VMDetector::RegistryValueCheck(HKEY mainkey,const char* subkey,const char* registryValueKey,const char* cmpValue) {
 
 	bool flag = true;
-	if (registryManager.RegstrySelect(mainkey, subkey, registryValue)) {
-		flag = false;
+	BYTE* keyValue;
+	keyValue = registryManager.RegstrySelect(mainkey, subkey, registryValueKey);
+	if(keyValue != NULL){
+		if (memcmp(keyValue, registryManager.convertASCII(cmpValue), sizeof cmpValue) == 0) {
+			flag = false;
+		}
+		delete[] keyValue;
 	}
 	return flag;
 }

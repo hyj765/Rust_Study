@@ -8,7 +8,7 @@ private:
 public:
 	VMDetector() {};
 	bool RegistryCheck(HKEY mainkey,const char* registry);
-	bool RegistryValueCheck(HKEY mainkey, const char* subkey, const char* registryValue);
+	bool RegistryValueCheck(HKEY mainkey, const char* subkey, const char* registryValueKey, const char* cmpValue);
 	bool DetectVirtualBox();
 	bool DetectVirtualWare();
 	bool MacAddressCheck(const std::vector<std::vector<int>> &prefix);

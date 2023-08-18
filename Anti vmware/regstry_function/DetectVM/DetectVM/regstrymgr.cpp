@@ -16,9 +16,10 @@ wchar_t * RegMgr::convertASCII(const char* charString) {
 HKEY RegMgr::RegstryOpen(HKEY key, const char* subkey) {
 	HKEY regList=NULL;
 	wchar_t* convertedSubKey = this->convertASCII(subkey);
-	if (RegOpenKeyEx(key, convertedSubKey, 0, KEY_ALL_ACCESS, &regList) == ERROR_SUCCESS) {
+	LSTATUS status = RegOpenKeyEx(key, convertedSubKey, 0, KEY_READ, &regList);
+	if (status == ERROR_SUCCESS){
 		delete[] convertedSubKey;
-		return regList;
+		return regList;;
 	}
 
 	delete[] convertedSubKey;
@@ -50,36 +51,42 @@ void RegMgr::RegstrySelectALL(HKEY key, const char* subkey) {
 		wprintf(L"Wrong key Input or fail to access the registry key\n");
 		return;
 	}
-	wchar_t buffer[256];
-	DWORD buffsiz = 256;
-	BYTE data[16384];
-	DWORD datasiz = 16384;
+	wchar_t buffer[MAX_PATH];
+	DWORD buffsiz = MAX_PATH;
+	BYTE data[MAX_PATH];
+	DWORD datasiz = MAX_PATH;
 	DWORD index = 0;
 	DWORD type;
 	while (RegEnumValue(regList, index, buffer, &buffsiz, NULL, &type, data,&datasiz) == ERROR_SUCCESS) {
-		wprintf(L"keyName : %s, value data: %s\n", buffer, data);
-		
+		if (type == REG_SZ) {
+			wprintf(L"keyName : %s, value data: %s\n", buffer, reinterpret_cast<const wchar_t*>(data));
+		}
+		else if (type == REG_DWORD) {
+			wprintf(L"keyName : %s, value data: %d\n", buffer, *reinterpret_cast<const DWORD*>(data));
+		}
 		index++;
-		buffsiz = 256;
-		datasiz = 16384;
+		buffsiz = MAX_PATH;
+		datasiz = MAX_PATH;
 	}
 
 	RegCloseKey(regList);
 	return;
 }
 
+BYTE* RegMgr::RegstrySelect(HKEY key, const char* subkey, const char* selectkey) {
+	DWORD dataSize = 0;
+	RegGetValue(key, convertASCII(subkey), convertASCII(selectkey), RRF_RT_ANY, NULL, NULL, &dataSize);
 
-bool RegMgr::RegstrySelect(HKEY key, const char* subkey, const char* selectkey) {
-	
-	HKEY regList = NULL;
-	regList = this->RegstryOpen(key, subkey);
-	if (regList == NULL) {
-		return false;
+	BYTE* buffer = new BYTE[dataSize];
+
+	if (buffer) {
+		if (RegGetValue(key, convertASCII(subkey), convertASCII(selectkey), RRF_RT_ANY, NULL, buffer, &dataSize) == ERROR_SUCCESS) {
+			return buffer;
+		}
+		else {
+			delete[] buffer;
+		}
 	}
-	
-	char buffer[265];
-	DWORD getByte;
-	RegQueryValueExA(regList, selectkey,NULL,NULL,(LPBYTE)buffer,&getByte);
-	RegCloseKey(regList);
-	return true;
+
+	return nullptr;
 }
