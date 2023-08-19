@@ -45,18 +45,17 @@ bool VMDetector::DetectVirtualBox() {
 
 	for (int i = 0; i < 2; ++i) {
 		if (!ProcessBasedCheck(processList[i])) {
-			printf("pc");
 			return false;
 		}
 	}
 
+	
 
 	std::vector<std::vector<int>> prefixaddr = {
 	   {0x08, 0x00, 0x27}
 	};
 	
 	if (!MacAddressCheck(prefixaddr)) {
-		printf("ps");
 		return false;
 	}
 	
@@ -164,9 +163,11 @@ std::vector<DWORD> VMDetector::RetCPUID() {
 	return { id1,id2,id3 };
 }
 
-bool FileBasedCheck() {
-
-
+bool VMDetector::FileBasedCheck(const wchar_t* folderPath,const wchar_t* targetFileName) {
+	
+	if (fileManager.IsExistInFolder(folderPath, targetFileName)) {
+		return false;
+	}
 
 	return true;
 }

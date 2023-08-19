@@ -3,7 +3,7 @@
 
 
 wchar_t * RegMgr::convertASCII(const char* charString) {
-	// const char[]를 wchar_t[]로 변환
+
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	std::wstring wideString = converter.from_bytes(charString);
 	wchar_t* wcstring = new wchar_t[wideString.length() + 1];
