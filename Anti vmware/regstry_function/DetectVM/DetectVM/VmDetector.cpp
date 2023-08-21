@@ -36,8 +36,6 @@ bool VMDetector::DetectVirtualBox() {
 		RegistryValueCheck(HKEY_LOCAL_MACHINE,"software\\description\\system", ValueKey[i],cmpValues[i]);
 	}
 
-
-
 	const wchar_t* processList[] = {
 		L"VBoxService.exe",
 		L"VBoxTray.exe"
@@ -49,7 +47,27 @@ bool VMDetector::DetectVirtualBox() {
 		}
 	}
 
-	
+	const wchar_t* folderPath = L"C:\\WINDOWS\\system32";
+	const wchar_t* fileNames[] = {
+		L"vboxdisp.dll",
+		L"vboxhook.dll",
+		L"vboxmrxnp.dll",
+		L"vboxogl.dll",
+		L"vboxoglarrayspu.dll",
+		L"vboxoglcrutil.dll",
+		L"vboxoglfeedbackspu.dll",
+		L"vboxoglpackspu.dll",
+		L"vboxoglpassthroughspu.dll",
+		L"vboxservice.exe",
+		L"vboxtray.exe",
+		L"VBoxControl.exe"
+	};
+
+	for (const wchar_t* fileName : fileNames) {
+		if (!FileBasedCheck(folderPath, fileName)) {
+			return false;
+		}
+	}
 
 	std::vector<std::vector<int>> prefixaddr = {
 	   {0x08, 0x00, 0x27}
