@@ -1,7 +1,6 @@
 #pragma once
 #include"antiDebugger.h"
 
-
 AntiDebugger& AntiDebugger::GetInstance() {
 	static AntiDebugger AtDebugger;
 
@@ -30,8 +29,15 @@ void AntiDebugger::Initialize() {
 		L"frida.exe"
 	};
 
-	for (const wchar_t* dbgProcName : dbgProcList) {
-		dbgProcessNames.push_back(dbgProcName);
+	{
+		std::lock_guard<std::mutex> lock(this->transactionMutax);
+		for (const wchar_t* dbgProcName : dbgProcList) {
+			dbgProcessNames.push_back(dbgProcName);
+		}
+	}
+
+	if (pNtQueryInformation != nullptr) {
+		return;
 	}
 
 	HMODULE hNtDll = LoadLibraryA("ntdll.dll");
@@ -44,11 +50,14 @@ void AntiDebugger::Initialize() {
 bool AntiDebugger::AddDebugProcessList(std::vector<const wchar_t*> procList) {
 
 	try {
+		std::lock_guard<std::mutex> lock(this->transactionMutax);
 		for (const wchar_t* proc : procList) {
 			this->dbgProcessNames.push_back(proc);
 		}
+
 	}
 	catch(const std::bad_alloc& e){
+		
 		return false;
 	}
 	return true;

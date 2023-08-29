@@ -10,6 +10,7 @@ typedef NTSTATUS(WINAPI* pNtQueryInformationProcess)(
 
 typedef LONG (UnhandlerExceptionFilter)(PEXCEPTION_POINTERS pExceptionInfo);
 
+
 class AntiDebugger {
 private:
 	AntiDebugger() {};
@@ -17,8 +18,8 @@ private:
 	AntiDebugger& operator=(const AntiDebugger& ref);
 	~AntiDebugger() {};
 	std::vector<const wchar_t*> dbgProcessNames;
-	pNtQueryInformationProcess pNtQueryInformation;
-		
+	pNtQueryInformationProcess pNtQueryInformation = nullptr;
+	std::mutex transactionMutax;
 public:
 	static AntiDebugger& GetInstance();
 	void Initialize();
