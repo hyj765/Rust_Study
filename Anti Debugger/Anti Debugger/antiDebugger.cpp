@@ -67,6 +67,105 @@ bool AntiDebugger::CheckByDebuggingFlag() {
 	return IsDebuggerPresent();
 }
 
+BYTE AntiDebugger::PatchDbgBreakPoint() {
+	
+	// Caution: this function modify "Ntdll" if you use this function you must call UnpatchDbgBreakPoint()
+	// UnPatchDbgBreakPoint function required that original first byte of DBGbreakPoint Function. first byte is 0xCC; 
+
+	HMODULE hNtdll = GetModuleHandleA("ntdll.dll");
+	if (!hNtdll)
+		return -1;
+
+	FARPROC pDbgBreakPoint = GetProcAddress(hNtdll, "DbgBreakPoint");
+	if (!pDbgBreakPoint) {
+		return -1;
+	}
+
+	DWORD dwOldProtect;
+
+	if (!VirtualProtect(pDbgBreakPoint, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect)) {
+		return -1;
+	}
+
+	BYTE originalByte;
+
+	if (!ReadProcessMemory(GetCurrentProcess(), pDbgBreakPoint, &originalByte, 1, nullptr)) {
+		return -1;
+	}
+
+	*(PBYTE)pDbgBreakPoint = (BYTE)0xC3;
+	
+	return originalByte;
+}
+
+void AntiDebugger::UnPachDbgBreakPoint(BYTE original) {
+
+	HMODULE hNtdll = GetModuleHandleA("ntdll.dll");
+	if (!hNtdll) {
+		return;
+	}
+
+	FARPROC pDbgBreakPoint = GetProcAddress(hNtdll, "DbgBreakPoint");
+	if (!pDbgBreakPoint) {
+		return;
+	}
+
+	DWORD dwOldProtect;
+	if (!VirtualProtect(pDbgBreakPoint, 1, PAGE_EXECUTE_READWRITE, &dwOldProtect)) {
+		return;
+	}
+
+	*(PBYTE)pDbgBreakPoint = original;
+}
+
+bool AntiDebugger::IsFunctionPatchDetect(const char* moduleName, const char* functionName) {
+
+	HMODULE targetModule = GetModuleHandleA(moduleName);
+	if (!targetModule) {
+		return false;
+	}
+
+	FARPROC pTargetFunction = GetProcAddress(targetModule, functionName);
+	if (!pTargetFunction) {
+		return false;
+	}
+
+	HANDLE processSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (processSnapShot) {
+		PROCESSENTRY32W procEntry;
+		procEntry.dwSize = sizeof(PROCESSENTRY32W);
+		const DWORD curPid = GetCurrentProcessId();
+		DWORD functionbyte = 0;
+		HANDLE hProcess = NULL;
+		if (Process32First(processSnapShot, &procEntry)) {
+			do {
+				if (curPid == procEntry.th32ProcessID) {
+					continue;
+				}
+
+				hProcess = OpenProcess(PROCESS_ALL_ACCESS,FALSE,procEntry.th32ProcessID);
+
+				if (ReadProcessMemory(hProcess, pTargetFunction, &functionbyte, sizeof(DWORD), NULL)) {
+					if (functionbyte != *(PDWORD)pTargetFunction) {
+						CloseHandle(hProcess);
+						CloseHandle(processSnapShot);
+						return true;
+					}
+				}
+
+			} while (Process32NextW(processSnapShot, &procEntry));
+		}
+		if (hProcess) {
+			CloseHandle(hProcess);
+		}
+		if (processSnapShot) {
+			CloseHandle(processSnapShot);
+		}
+	}
+
+	return false;
+}
+
 bool AntiDebugger::IsDebuggerProcessRunning(const wchar_t* procName) {
 
 	if (this->dbgProcessNames.size() == 0) {

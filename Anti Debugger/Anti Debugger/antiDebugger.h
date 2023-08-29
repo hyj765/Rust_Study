@@ -25,6 +25,9 @@ public:
 	void Initialize();
 	bool AddDebugProcessList(std::vector<const wchar_t*> procList);
 	bool CheckByDebuggingFlag();
+	bool IsFunctionPatchDetect(const char* moduleName,const char* functionName);
+	BYTE PatchDbgBreakPoint();
+	void UnPachDbgBreakPoint(BYTE original);
 	bool IsDebuggerProcessRunning(const wchar_t* procName);
 	int IsExistDebuggingProcess(HANDLE processHandle);
 	bool IsCheckProcessInformation();
@@ -33,4 +36,5 @@ public:
 	void RegistUnHandlerException(UnhandlerExceptionFilter* unHandlerFunc);
 	bool TimeIntervalCheck(DWORD64 nativeTime, ULARGE_INTEGER start, ULARGE_INTEGER end);
 	ULARGE_INTEGER RecordTime();
+	
 };
