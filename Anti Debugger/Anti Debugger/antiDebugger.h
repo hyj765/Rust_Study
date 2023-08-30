@@ -1,6 +1,6 @@
 #pragma once
 #include"stdafx.h"
-
+#include"IntegrityChecker.h"
 typedef NTSTATUS(WINAPI* pNtQueryInformationProcess)(
 	HANDLE processHandle,
 	PPROCESS_INFORMATION processInforamtionClass,
@@ -20,6 +20,7 @@ private:
 	std::vector<const wchar_t*> dbgProcessNames;
 	pNtQueryInformationProcess pNtQueryInformation = nullptr;
 	std::mutex transactionMutax;
+	IntegrityChecker integrityCheker;
 public:
 	static AntiDebugger& GetInstance();
 	void Initialize();
