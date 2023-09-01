@@ -31,7 +31,6 @@ std::string IntegrityChecker::GetFuntionData(PVOID functionAddress, size_t funct
 		functionSiz--;
 	}
 
-
 	return functionData;
 }
 

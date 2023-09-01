@@ -8,4 +8,5 @@ public:
 	const unsigned char* GetDataIntoHash(const unsigned char* hash,std::string data);
 	std::string GetFuntionData(PVOID functionAddress, size_t functionSiz);
 	std::string EncryptionSha256(std::string data);
+
 };

@@ -3,7 +3,6 @@
 
 AntiDebugger& AntiDebugger::GetInstance() {
 	static AntiDebugger AtDebugger;
-
 	return AtDebugger;
 }
 
@@ -260,4 +259,44 @@ ULARGE_INTEGER AntiDebugger::RecordTime() {
 	}
 
 	return time;
+}
+
+std::string AntiDebugger::GetFunctionHash(PVOID functionAddress) {
+
+	size_t funcSiz = integrityCheker.GetFunctionSize(functionAddress);
+	if (funcSiz == NULL) {
+		return NULL;
+	}
+
+	std::string functiondata = integrityCheker.GetFuntionData(functionAddress, funcSiz);
+	if (functiondata.size() <= 0) {
+		return NULL;
+	}
+
+	std::string functionhash=integrityCheker.EncryptionSha256(functiondata);
+	
+	return functionhash;
+}
+
+bool AntiDebugger::registFunctionHash(std::string hash, std::string functionName) {
+
+	try {
+		hashList[functionName] = hash;
+		return true;
+	}
+	catch (const std::exception& e) {
+		return false;
+	}
+
+}
+
+bool AntiDebugger::CompareFunctionHash(PVOID functionAddress,std::string functionName) {
+
+	std::string targethash=GetFunctionHash(functionAddress);
+
+	if (targethash == hashList[functionName]) {
+		return true;
+	}
+
+	return false;
 }

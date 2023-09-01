@@ -1,7 +1,8 @@
 #pragma once
 #include"stdafx.h"
 #include"IntegrityChecker.h"
-typedef NTSTATUS(WINAPI* pNtQueryInformationProcess)(
+
+typedef NTSTATUS(WINAPI *pNtQueryInformationProcess)(
 	HANDLE processHandle,
 	PPROCESS_INFORMATION processInforamtionClass,
 	PVOID ProcessInformation,
@@ -21,6 +22,8 @@ private:
 	pNtQueryInformationProcess pNtQueryInformation = nullptr;
 	std::mutex transactionMutax;
 	IntegrityChecker integrityCheker;
+	std::map<std::string, std::string> hashList;
+
 public:
 	static AntiDebugger& GetInstance();
 	void Initialize();
@@ -37,5 +40,7 @@ public:
 	void RegistUnHandlerException(UnhandlerExceptionFilter* unHandlerFunc);
 	bool TimeIntervalCheck(DWORD64 nativeTime, ULARGE_INTEGER start, ULARGE_INTEGER end);
 	ULARGE_INTEGER RecordTime();
-	
+	std::string GetFunctionHash(PVOID functionAddress);
+	bool registFunctionHash(std::string hash, std::string functionName);
+	bool CompareFunctionHash(PVOID functionAddress, std::string functionName);
 };
