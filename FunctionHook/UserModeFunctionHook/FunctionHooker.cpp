@@ -4,23 +4,22 @@
 
 void Hooker::HookingWinApi(std::string functionName, DWORD_PTR function) {
 	
-	SIZE_T bytesWritten = 0;
-	DWORD oldProtect = 0;
-	// IATÀÇ ÁÖ¼Ò °ª¿¡ ±ÇÇÑ º¯°æ
-	VirtualProtect((LPVOID)(apioriginal[functionName]), 8, PAGE_READWRITE, &oldProtect);
-	// IATÀÇ °ªÀº ÇØ´ç dll ÇÔ¼öÀÇ À§Ä¡ÁÖ¼Ò¸¦ ´ã°í ÀÖ±â ¶§¹®¿¡ ÀÌ¸¦ ³»°¡ ¸¸µç ÇÔ¼ö·Î º¯°æ
+	DWORD old = 0;
+	// IATì˜ ì£¼ì†Œ ê°’ì— ê¶Œí•œ ë³€ê²½
+	VirtualProtect((LPVOID)(apioriginal[functionName]), 8, PAGE_READWRITE, &old);
+	// IATì˜ ê°’ì€ í•´ë‹¹ dll í•¨ìˆ˜ì˜ ìœ„ì¹˜ì£¼ì†Œë¥¼ ë‹´ê³  ìˆê¸° ë•Œë¬¸ì— ì´ë¥¼ ë‚´ê°€ ë§Œë“  í•¨ìˆ˜ë¡œ ë³€ê²½
 	*(apioriginal[functionName]) = (DWORD_PTR)function;
 
 }
 
 void Hooker::WinApiInitialize() {
 
-	// HModuleÀº handleÀÌ ¾Æ´Ñ imagebase °ªÀ» ¹İÈ¯ÇÔ.
+	// HModuleì€ handleì´ ì•„ë‹Œ imagebase ê°’ì„ ë°˜í™˜í•¨.
 	LPVOID imagebase = GetModuleHandleA(NULL);
 	
-	// dos header È®º¸
+	// dos header í™•ë³´
 	PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(imagebase);
-	//nt header È®º¸
+	//nt header í™•ë³´
 	PIMAGE_NT_HEADERS ntHeader = reinterpret_cast<PIMAGE_NT_HEADERS>((DWORD_PTR)imagebase + dosHeader->e_lfanew);
 	PIMAGE_IMPORT_DESCRIPTOR iid = (PIMAGE_IMPORT_DESCRIPTOR)((DWORD_PTR)imagebase + ntHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 	
@@ -37,8 +36,8 @@ void Hooker::WinApiInitialize() {
 			while (originalFirstThunk->u1.AddressOfData != NULL) {
 
 				PIMAGE_IMPORT_BY_NAME functionName = (PIMAGE_IMPORT_BY_NAME)((DWORD_PTR)imagebase + originalFirstThunk->u1.AddressOfData);
-				// apioriginalÀÌ¶ó´Â map¿¡ ÇØ´ç iatÀÇ ÁÖ¼Ò °ª ÀúÀå
-				// ÀÌ·¸°Ô ¼öÇàÇÏ¸é ¸Å¹ø ¸ğµç iat¸¦ ¼øÈ¸ÇÏÁö ¾Ê°í ÇÑ¹ø¸¸¿¡ apiµéÀ» »ç¿ëÇÒ ¼ö ÀÖÀ½.
+				// apioriginalì´ë¼ëŠ” mapì— í•´ë‹¹ iatì˜ ì£¼ì†Œ ê°’ ì €ì¥
+				// ì´ë ‡ê²Œ ìˆ˜í–‰í•˜ë©´ ë§¤ë²ˆ ëª¨ë“  iatë¥¼ ìˆœíšŒí•˜ì§€ ì•Šê³  í•œë²ˆë§Œì— apië“¤ì„ ì‚¬ìš©í•  ìˆ˜ ìˆìŒ.
 				apioriginal[std::string(functionName->Name)] = &firstThunk->u1.Function;
 				++originalFirstThunk;
 				++firstThunk;
