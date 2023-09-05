@@ -2,16 +2,26 @@
 #include<Windows.h>
 #include"FunctionHooker.h"
 
-using PrototypeMessageBox = int (WINAPI*)(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
-PrototypeMessageBox original = MessageBoxA;
+using RestrictedLoadLibary = HMODULE(WINAPI*)(LPCSTR lplibfileName);
+RestrictedLoadLibary originalLib = LoadLibraryA;
+
+HMODULE hookedLoadLib(LPCSTR lplibfileName) {
+
+	if (lplibfileName == "Inject.dll") {
+		std::cout << "is blocked" << std::endl;
+		return NULL;
+	}
+
+	return originalLib(lplibfileName);
+}
 
 int main()
 {
-    Hooker keeper;
+	Hooker s;
+	s.WinApiInitialize();
+	s.HookingWinApi("LoadLibraryA", (DWORD_PTR)hookedLoadLib);
 
-    keeper.WinApiInitialize();
-   
-    std::cout << original << std::endl;
-    keeper.value_print("MessageBoxA","USER32.dll");
-    return 0;
+	LoadLibraryA("Inject.dll");
+	
+	return 0;
 }
