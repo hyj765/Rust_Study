@@ -3,8 +3,6 @@
 #include<ntddk.h>
 
 
-namespace Communicate {
-
 	NTSTATUS StartCommunicate(PFLT_FILTER filter,
 		PFLT_PORT port,
 		PFLT_CONNECT_NOTIFY notifyCallback,
@@ -17,4 +15,3 @@ namespace Communicate {
 
 	NTSTATUS DataSend(PFLT_FILTER filterHandle,PFLT_PORT clientPort, PVOID buffer, ULONG bufferSize, PVOID response, ULONG responseSize, ULONG timeOut);
 
-}
