@@ -22,21 +22,31 @@ bool ExtensionCheck(const wchar_t* extension) {
 
 bool DllListCheck(std::set<const wchar_t*> dllList,const wchar_t* dllName) {
     
-    std::set<const wchar_t*>::iterator itor = dllList.find(dllName);
+   
+    for (auto dll : dllList) {
+        if (wcscmp(dll, dllName) == 0) {
+            return true;
+        }
+    }
 
-    if (itor != dllList.end()) return true;
-    
     return false;
 
 }
 
 
-bool EjectDll(char* dllList) {
+bool EjectDll(const wchar_t* dllName) {
     
+    HMODULE tModule = GetModuleHandle(dllName);
+    if (tModule == NULL) {
+        return false;
+    }
+
+    FreeLibrary(tModule);
+
     return true;
 }
 
-int CheckingDll(std::set<const wchar_t*> dllList, PLIST_ENTRY head ) {
+int CheckingDll(std::set<const wchar_t*> dllList, PLIST_ENTRY head , std::vector<const wchar_t*> &blackList) {
 
     bool first = false;
     for (PLIST_ENTRY entry = head->Flink; entry != head; entry = entry->Flink) {
@@ -44,32 +54,40 @@ int CheckingDll(std::set<const wchar_t*> dllList, PLIST_ENTRY head ) {
             first = true;
             continue;
         }
+
         PLDR_DATA_TABLE_ENTRY pLdrEntry = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, InMemoryOrderModuleList);
         
+        
         if (!DllListCheck(dllList, pLdrEntry->BaseDllName.Buffer)) {
+            blackList.push_back(pLdrEntry->BaseDllName.Buffer);
             return false;
         }
-
-        std::cout << pLdrEntry->BaseDllName.MaximumLength << " " << pLdrEntry->BaseDllName.Length << " ";
-        wprintf(L" dllName : %s \r\n", pLdrEntry->BaseDllName.Buffer);
-        //int len = sizeof(dllList);
-        //for(int len = )
+        
+       // wprintf(L" dllName : %s \r\n", pLdrEntry->BaseDllName.Buffer);
     }
 
-    return 1;
+    return true;
 }
 
 
 
 int main() {
-    // PEB 구조체의 포인터 선언
     
     PPEB peb = nullptr;
     GetPEB(&peb);
-    std::set<const wchar_t*> dllList;
-    CheckingDll(dllList, &peb->Ldr->InMemoryOrderModuleList);
+    std::vector<const wchar_t*> blackList;
+    std::set<const wchar_t*> dllWhiteList;
+    dllWhiteList.insert(L"ntdll.dll");
+    dllWhiteList.insert(L"KERNEL32.DLL");
+    dllWhiteList.insert(L"KERNELBASE.dll");
+    dllWhiteList.insert(L"ucrtbased.dll");
+    dllWhiteList.insert(L"MSVCP140D.dll");
+    dllWhiteList.insert(L"VCRUNTIME140D.dll");
+    CheckingDll(dllWhiteList, &peb->Ldr->InMemoryOrderModuleList,blackList);
     
-
+    for (const wchar_t* dll : blackList) {
+        EjectDll(dll);
+    }
     
     return 0;
 }
