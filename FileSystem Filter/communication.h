@@ -3,7 +3,8 @@
 #include<ntddk.h>
 
 
-	NTSTATUS StartCommunicate(PFLT_FILTER filter,
+	NTSTATUS StartCommunicate(
+		PFLT_FILTER filter,
 		PFLT_PORT port,
 		PFLT_CONNECT_NOTIFY notifyCallback,
 		PFLT_DISCONNECT_NOTIFY disConnectCallback,

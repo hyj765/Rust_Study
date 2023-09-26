@@ -1,13 +1,14 @@
-
+#include"callbacks.h"
 #include <fltKernel.h>
 #include <dontuse.h>
-#include"communication.h"
+
+
 
 PFLT_FILTER gFilterHandle = NULL;
 PFLT_PORT port = NULL;
 PFLT_PORT clientPort = NULL;
 const FLT_OPERATION_REGISTRATION callbacks[] = {
-	{IRP_MJ_CREATE,0},
+	{IRP_MJ_CREATE,0,PreCreateCallback,PostCreateCallback},
 	{IRP_MJ_OPERATION_END}
 
 };
@@ -68,13 +69,11 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT pDrvObj, PUNICODE_STRING pRegPath) {
 	UNREFERENCED_PARAMETER(pRegPath);
 	UNICODE_STRING name = RTL_CONSTANT_STRING(L"\\myFilter");
 	status = FltRegisterFilter(pDrvObj, &FilterRegistration, &gFilterHandle);
-	StartCommunicate(gFilterHandle, port, ConnectedCallback, DisConnectCallback, MessageNotifyCallback, 1, name);
 
 	if (NT_SUCCESS(status)) {
+
 		status = FltStartFiltering(gFilterHandle);
 
-		
-		CloseCommunication(port);
 	}
 	FltUnregisterFilter(gFilterHandle);
 
