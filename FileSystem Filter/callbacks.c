@@ -6,7 +6,7 @@ FLT_PREOP_CALLBACK_STATUS PreCreateCallback(PFLT_CALLBACK_DATA data, PCFLT_RELAT
 
 	PFLT_FILE_NAME_INFORMATION fileNameInfo;
 	NTSTATUS status;
-	WCHAR name[200] = { 0 };
+	WCHAR name[260] = { 0 };
 
 	status = FltGetFileNameInformation(data, FLT_FILE_NAME_NORMALIZED | FLT_FILE_NAME_QUERY_DEFAULT, &fileNameInfo);
 
@@ -16,11 +16,15 @@ FLT_PREOP_CALLBACK_STATUS PreCreateCallback(PFLT_CALLBACK_DATA data, PCFLT_RELAT
 
 		if (NT_SUCCESS(status)) {
 
-			if(fileNameInfo->Name.MaximumLength < 260) {
+			/*
+			if(fileNameInfo->Name.MaximumLength <= 260) {
 
 				RtlCopyMemory(name, fileNameInfo->Name.Buffer, fileNameInfo->Name.MaximumLength);
 				KdPrint(("Create File: %ws \r\n", name));
 			}
+			*/
+
+			KdPrint(("Create File: %ws \r\n", fileNameInfo->Name.Buffer));
 
 		}
 
@@ -33,6 +37,7 @@ FLT_PREOP_CALLBACK_STATUS PreCreateCallback(PFLT_CALLBACK_DATA data, PCFLT_RELAT
 
 FLT_POSTOP_CALLBACK_STATUS PostCreateCallback(PFLT_CALLBACK_DATA data, PCFLT_RELATED_OBJECTS FltObjects, PVOID* CompletionContext, FLT_POST_OPERATION_FLAGS Flags) {
 
+	KdPrint(("PostPrint Check"));
 
 	return FLT_POSTOP_FINISHED_PROCESSING;
 }
